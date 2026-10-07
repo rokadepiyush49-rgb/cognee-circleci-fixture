@@ -1,0 +1,97 @@
+version: 2.1
+
+# Test fixture for the cognee CircleCI connector. Each branch produces a
+# different kind of pipeline (see README.md):
+#   main           -> failed pipeline: 3 failing tests + a failed job with
+#                     no test results; deploy never runs
+#   green          -> every job passes
+#   many-failures  -> 25 extra failing tests (to test the per-job cap)
+#   slow           -> a job that runs ~5 min (running -> finished re-check)
+#   hold           -> a workflow waiting on manual approval (on_hold)
+
+executors:
+  py:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: small
+
+jobs:
+  lint:
+    executor: py
+    steps:
+      - checkout
+      - run:
+          name: Compile check
+          command: python -m compileall -q app tests
+
+  test:
+    executor: py
+    steps:
+      - checkout
+      - run:
+          name: Install pytest
+          command: pip install pytest==8.3.3
+      - run:
+          name: Run tests
+          # xunit1 adds the file="..." attribute, so the API's tests
+          # endpoint fills in each test's file.
+          command: |
+            mkdir -p test-results
+            pytest -o junit_family=xunit1 --junitxml=test-results/junit.xml
+      # Without this the tests endpoint returns nothing for the job.
+      - store_test_results:
+          path: test-results
+
+  smoke:
+    executor: py
+    steps:
+      - run:
+          name: Health check
+          # Fails on main with log output only and no test results: the
+          # case where the connector has nothing but "failed" to report.
+          command: |
+            if [ "$CIRCLE_BRANCH" = "main" ]; then
+              echo "health check failed: /status returned 503"
+              exit 1
+            fi
+            echo "health check ok"
+
+  deploy:
+    executor: py
+    steps:
+      - run: echo "pretend deploy"
+
+  slow:
+    executor: py
+    steps:
+      - run:
+          name: Sleep 5 minutes
+          command: sleep 300
+
+workflows:
+  build-and-test:
+    jobs:
+      - lint
+      - test
+      - smoke
+      - deploy:
+          requires:
+            - lint
+            - test
+            - smoke
+
+  slow-check:
+    when:
+      equal: [slow, << pipeline.git.branch >>]
+    jobs:
+      - slow
+
+  needs-approval:
+    when:
+      equal: [hold, << pipeline.git.branch >>]
+    jobs:
+      - wait-for-approval:
+          type: approval
+      - deploy:
+          requires:
+            - wait-for-approval
