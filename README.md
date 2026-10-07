@@ -1,4 +1,4 @@
-# congee-test-runs
+# cognee-circleci-fixture
 
 A small repo whose CircleCI pipelines are used to test the cognee CircleCI connector ([#4710](https://github.com/topoteretes/cognee/issues/4710)). The tests are broken on purpose.
 
@@ -14,10 +14,10 @@ A small repo whose CircleCI pipelines are used to test the cognee CircleCI conne
 
 ## Setup
 
-1. Create an empty public GitHub repo (this one is `rokadepiyush49-rgb/congee-test-runs`) and push this folder to `main`:
+1. Create an empty public GitHub repo (this one is `rokadepiyush49-rgb/cognee-circleci-fixture`) and push this folder to `main`:
 
    ```bash
-   git init -b main && git add . && git commit -m "CircleCI connector fixture" && git remote add origin https://github.com/rokadepiyush49-rgb/congee-test-runs.git && git push -u origin main
+   git init -b main && git add . && git commit -m "CircleCI connector fixture" && git remote add origin https://github.com/rokadepiyush49-rgb/cognee-circleci-fixture.git && git push -u origin main
    ```
 
 2. In CircleCI, open **Projects → Set Up Project**, pick the repo, and choose the option that uses the existing `.circleci/config.yml` on `main`.
@@ -30,7 +30,7 @@ A small repo whose CircleCI pipelines are used to test the cognee CircleCI conne
 4. Find the project slug under **Project Settings → Overview**. It's `gh/<you>/<repo>` for the GitHub OAuth integration, or `circleci/<org-id>/<project-id>` for the GitHub App integration. Export it:
 
    ```bash
-   export SLUG=gh/rokadepiyush49-rgb/congee-test-runs
+   export SLUG=gh/rokadepiyush49-rgb/cognee-circleci-fixture
    ```
 
 5. Create the other branches. Each one gets an empty commit so the push always starts a pipeline:
